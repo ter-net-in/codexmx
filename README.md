@@ -8,7 +8,7 @@ Add the TUI plugin to `~/.config/opencode/tui.json`:
 
 ```json
 {
-  "plugin": ["@ternetin/opencode-codex-multiplexer/tui"]
+  "plugin": ["@ternetin/opencode-codex-multiplexer"]
 }
 ```
 
@@ -16,7 +16,7 @@ Optional hot-switch hook in `~/.config/opencode/opencode.json`:
 
 ```json
 {
-  "plugin": ["@ternetin/opencode-codex-multiplexer/server"]
+  "plugin": ["@ternetin/opencode-codex-multiplexer"]
 }
 ```
 

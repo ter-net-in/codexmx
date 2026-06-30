@@ -181,8 +181,10 @@ export async function accessToken() {
 
 export async function fetchUsage() {
   const token = await accessToken()
+  const signal = AbortSignal.timeout(15_000)
   const response = await fetch(usageUrl, {
-    headers: { authorization: `Bearer ${token}` }
+    headers: { authorization: `Bearer ${token}` },
+    signal
   })
 
   if (!response.ok) throw new Error(`Usage API ${response.status}`)

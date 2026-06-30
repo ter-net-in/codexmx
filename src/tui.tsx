@@ -1,5 +1,6 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiDialogSelectOption, TuiPlugin, TuiThemeCurrent } from "@opencode-ai/plugin/tui"
+import { TextAttributes } from "@opentui/core"
 import { createMemo, createSignal } from "solid-js"
 import {
   currentProfile,
@@ -64,6 +65,7 @@ export const tui: TuiPlugin = async (api) => {
   const theme = () => api.theme.current
   const [current, setCurrent] = createSignal(await currentProfile())
   const [usage, setUsage] = createSignal<UsageState>({ status: "loading" })
+  let didRenderRefresh = false
 
   async function refreshCurrent() {
     setCurrent(await currentProfile())
@@ -170,37 +172,61 @@ export const tui: TuiPlugin = async (api) => {
     }
   })
 
-  const Window = (props: { label: string; remaining?: number; reset: string }) => (
-    <box flexDirection="column">
+  const isLoading = () => windows().status === "loading"
+  const isError = () => windows().status === "error"
+  const isReady = () => windows().status === "ready"
+  const errorMessage = () => {
+    const state = windows()
+    return state.status === "error" ? state.message : ""
+  }
+  const errorAge = () => {
+    const state = windows()
+    return state.status === "error" ? `updated ${age(state.updatedAt)}` : ""
+  }
+  const primaryWindow = () => {
+    const state = windows()
+    return state.status === "ready" ? state.primary : undefined
+  }
+  const secondaryWindow = () => {
+    const state = windows()
+    return state.status === "ready" ? state.secondary : undefined
+  }
+
+  const Window = (props: { label: string; value: () => { remaining?: number; reset: string } | undefined }) => (
+    <box flexDirection="column" visible={isReady()}>
       <box flexDirection="row" height={1}>
         <text fg={theme().textMuted}>{props.label.padEnd(7)}</text>
-        <text fg={usageColor(theme(), props.remaining)}>{"━".repeat(filledBar(props.remaining))}</text>
-        <text fg={theme().textMuted}>{"━".repeat(barWidth - filledBar(props.remaining))}</text>
-        <text fg={usageColor(theme(), props.remaining)}>{` ${props.remaining === undefined ? "?" : props.remaining}%`}</text>
+        <text fg={usageColor(theme(), props.value()?.remaining)}>{"━".repeat(filledBar(props.value()?.remaining))}</text>
+        <text fg={theme().textMuted}>{"━".repeat(barWidth - filledBar(props.value()?.remaining))}</text>
+        <text fg={usageColor(theme(), props.value()?.remaining)}>{` ${props.value()?.remaining === undefined ? "?" : props.value()?.remaining}%`}</text>
       </box>
-      <text fg={theme().textMuted}>{`       ${props.reset}`}</text>
+      <text fg={theme().textMuted}>{`       ${props.value()?.reset ?? ""}`}</text>
     </box>
   )
 
   const UsageWidget = () => {
-    const state = windows()
+    if (!didRenderRefresh) {
+      didRenderRefresh = true
+      void refreshAll()
+    }
+
     return (
       <box flexDirection="column">
         <text>{""}</text>
-        <text fg={theme().text}>Codex Usage</text>
-        {state.status === "loading" ? (
-          <text fg={theme().textMuted}>loading...</text>
-        ) : state.status === "error" ? (
-          <box flexDirection="column">
-            <text fg={theme().error}>{state.message}</text>
-            <text fg={theme().textMuted}>{`updated ${age(state.updatedAt)}`}</text>
-          </box>
-        ) : (
-          <box flexDirection="column">
-            <Window label={state.primary.label} remaining={state.primary.remaining} reset={state.primary.reset} />
-            <Window label={state.secondary.label} remaining={state.secondary.remaining} reset={state.secondary.reset} />
-          </box>
-        )}
+        <text fg={theme().text} attributes={TextAttributes.BOLD}>
+          Codex Usage
+        </text>
+        <text fg={theme().textMuted} visible={isLoading()}>
+          loading...
+        </text>
+        <box flexDirection="column" visible={isError()}>
+          <text fg={theme().error}>{errorMessage()}</text>
+          <text fg={theme().textMuted}>{errorAge()}</text>
+        </box>
+        <box flexDirection="column" visible={isReady()}>
+          <Window label="5h" value={primaryWindow} />
+          <Window label="weekly" value={secondaryWindow} />
+        </box>
       </box>
     )
   }
