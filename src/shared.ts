@@ -181,7 +181,7 @@ export async function accessToken() {
 
 export async function fetchUsage() {
   const token = await accessToken()
-  const signal = AbortSignal.timeout(15_000)
+  const signal = AbortSignal.timeout(5_000)
   const response = await fetch(usageUrl, {
     headers: { authorization: `Bearer ${token}` },
     signal

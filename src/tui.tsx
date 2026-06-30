@@ -65,7 +65,6 @@ export const tui: TuiPlugin = async (api) => {
   const theme = () => api.theme.current
   const [current, setCurrent] = createSignal(await currentProfile())
   const [usage, setUsage] = createSignal<UsageState>({ status: "loading" })
-  let didRenderRefresh = false
 
   async function refreshCurrent() {
     setCurrent(await currentProfile())
@@ -84,7 +83,7 @@ export const tui: TuiPlugin = async (api) => {
     await refreshUsage()
   }
 
-  void refreshAll()
+  await refreshAll()
   const timer = setInterval(() => void refreshAll(), refreshMs)
   api.lifecycle.onDispose(() => clearInterval(timer))
 
@@ -204,32 +203,25 @@ export const tui: TuiPlugin = async (api) => {
     </box>
   )
 
-  const UsageWidget = () => {
-    if (!didRenderRefresh) {
-      didRenderRefresh = true
-      void refreshAll()
-    }
-
-    return (
-      <box flexDirection="column">
-        <text>{""}</text>
-        <text fg={theme().text} attributes={TextAttributes.BOLD}>
-          Codex Usage
-        </text>
-        <text fg={theme().textMuted} visible={isLoading()}>
-          loading...
-        </text>
-        <box flexDirection="column" visible={isError()}>
-          <text fg={theme().error}>{errorMessage()}</text>
-          <text fg={theme().textMuted}>{errorAge()}</text>
-        </box>
-        <box flexDirection="column" visible={isReady()}>
-          <Window label="5h" value={primaryWindow} />
-          <Window label="weekly" value={secondaryWindow} />
-        </box>
+  const UsageWidget = () => (
+    <box flexDirection="column">
+      <text>{""}</text>
+      <text fg={theme().text} attributes={TextAttributes.BOLD}>
+        Codex Usage
+      </text>
+      <text fg={theme().textMuted} visible={isLoading()}>
+        loading...
+      </text>
+      <box flexDirection="column" visible={isError()}>
+        <text fg={theme().error}>{errorMessage()}</text>
+        <text fg={theme().textMuted}>{errorAge()}</text>
       </box>
-    )
-  }
+      <box flexDirection="column" visible={isReady()}>
+        <Window label="5h" value={primaryWindow} />
+        <Window label="weekly" value={secondaryWindow} />
+      </box>
+    </box>
+  )
 
   const unregisterCommands = api.keymap.registerLayer({
     commands: [
