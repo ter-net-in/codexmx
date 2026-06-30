@@ -2,6 +2,8 @@
 
 OpenCode TUI plugin for switching saved Codex/OpenAI auth profiles and showing Codex usage windows.
 
+![OpenCode Codex usage sidebar](assets/opencode-session.png)
+
 ## Install
 
 Add the TUI plugin to `~/.config/opencode/tui.json`:
